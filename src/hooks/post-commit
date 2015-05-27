@@ -1,0 +1,67 @@
+#!/bin/bash
+
+set -euo pipefail
+
+GIT_AUTHOR_NAME=yob
+GIT_AUTHOR_EMAIL=yob
+branch=$(git symbolic-ref --short HEAD)
+remote=$(git config --get "branch.$branch.remote")
+head_parent=$(git rev-parse HEAD)
+repodir=$(git rev-parse --show-toplevel)
+cd "$repodir"
+gitdir=$repodir/$(git rev-parse --git-dir)
+# we should examine the ssh config and host file to get a canonical domain on
+# this url:
+url=$(git config --get "remote.$remote.url")
+
+if [ -z "$remote" ] ; then
+	exit 0
+fi
+
+yobdir=$(mktemp -d -t yob)
+
+# the following is adapted from git-new-workdir
+# https://github.com/git/git/blob/master/contrib/workdir/git-new-workdir
+cd "$yobdir"
+mkdir .git
+for x in config refs logs/refs objects info packed-refs remotes rr-cache svn
+do
+	case $x in
+	*/*)
+		mkdir -p "$(dirname .git/$x)"
+		;;
+	esac
+	ln -s "$gitdir/$x" .git/$x
+done
+
+track_yob=false
+create_yob=false
+echo ref: "refs/heads/yob/$remote" > .git/HEAD
+git checkout "yob/$remote" 2> /dev/null || track_yob=true
+if $track_yob ; then
+	git checkout -b "yob/$remote" "$remote/yob" 2> /dev/null || create_yob=true
+fi
+
+if $create_yob ; then
+	echo "yob init yob/$remote $url"
+	git checkout --orphan "yob/$remote"
+	touch yob
+	git add -A
+	git commit -m "yob init $url" > /dev/null
+	git config "branch.yob/$remote.remote" "$remote"
+	git config "branch.yob/$remote.merge" "refs/heads/yob/$remote"
+else
+	if [ -z "$(cat yob)" ] ; then
+		echo yob > yob
+	else
+		echo > yob
+	fi
+fi
+
+
+yob_parent=$(cat ".git/refs/heads/yob/$remote")
+git add -A
+git commit-tree $(git write-tree) -p $yob_parent -p $head_parent -m "$branch $url" > ".git/refs/heads/yob/$remote"
+
+cd - > /dev/null
+rm -r "$yobdir"

@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -euo pipefail
+
+branch=$(git symbolic-ref --short HEAD)
+remote=$(git config --get "branch.$branch.remote")
+repodir=$(git rev-parse --show-toplevel)
+cd "$repodir"
+gitdir=$repodir/$(git rev-parse --git-dir)
+yobdir=$(mktemp -d -t yob)
+echo yobdir $yobdir
+
+# the following is adapted from git-new-workdir
+# https://github.com/git/git/blob/master/contrib/workdir/git-new-workdir
+cd "$yobdir"
+mkdir .git
+for x in config refs logs/refs objects info packed-refs remotes rr-cache svn
+do
+	case $x in
+	*/*)
+		mkdir -p "$(dirname .git/$x)"
+		;;
+	esac
+	ln -s "$gitdir/$x" .git/$x
+done
+
+echo ref: "refs/heads/yob/$remote" > .git/HEAD
+git checkout "yob/$remote"
+git push
