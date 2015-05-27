@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -euo pipefail
+
+remote=${1:-origin}
+repodir=$(git rev-parse --show-toplevel)
+cd "$repodir"
+gitdir=$repodir/$(git rev-parse --git-dir)
+yobdir=$(mktemp -d -t yob)
+# we should examine the ssh config and host file to get a canonical domain on
+# this url:
+url=$(git config --get "remote.$remote.url")
+
+git fetch "$remote"
+
+# the following is adapted from git-new-workdir
+# https://github.com/git/git/blob/master/contrib/workdir/git-new-workdir
+cd "$yobdir"
+mkdir .git
+for x in config refs logs/refs objects info packed-refs remotes rr-cache svn
+do
+	case $x in
+	*/*)
+		mkdir -p "$(dirname .git/$x)"
+		;;
+	esac
+	ln -s "$gitdir/$x" .git/$x
+done
+
+echo ref: "refs/heads/yob/$remote" > .git/HEAD
+git checkout "yob/$remote"
+git merge -s ours "$remote/yob" -m "yob merge from $url"
