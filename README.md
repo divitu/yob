@@ -36,12 +36,26 @@ If you are confused by Git, Yob can help your local Git ninja understand what
 mistakes you've made and the best way to correct them.  It can also help recover
 data that would otherwise be lost.  In this way, Yob is like trianing wheels.
 
+Okay, How?
+==========
+
+Every time you make a commit (including a merge commit), Yob makes another
+commit to the Yob branch.  This Yob commit will have the previous Yob commit as
+its first parent, and your commit as the other.  If there is no previous Yob
+commit, it will create an orphan commit, then make the above commit.
+
+Before you push to a remote, Yob pushes `yob/<REMOTE>` to `yob` on the
+remote.
+
+When you fetch with `yob-fetch`, Yob does `git fetch <REMOTE>`, then merges the
+remote `yob` with the local `yob/<REMOTE>`.
+
 Consideration
 =============
 
 Those who are knowledgeable in Git are probably shouting at me right now that
 this scheme will blow up the object store to ridicuous proportions.  You're
-probably right, but it's a trade off for better visibility.  If your application
+probably right, but it's a trade-off for better visibility.  If your application
 can't handle the extra overhead, Yob is probably not the solution for you.
 
 To Do
