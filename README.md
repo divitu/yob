@@ -58,6 +58,12 @@ this scheme will blow up the object store to ridicuous proportions.  You're
 probably right, but it's a trade-off for better visibility.  If your application
 can't handle the extra overhead, Yob is probably not the solution for you.
 
+What's a Yob?
+-------------
+
+"Yob" is a British insult meaning "idiot".  "Git" is a British insult meaning
+"idiot".  The coincidence is striking.
+
 To Do
 -----
 
