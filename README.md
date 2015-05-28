@@ -56,3 +56,4 @@ To Do
 * `yob-pull`
 * allow tracking branches with names different than their remote counterparts
 * better Git integration (like `hub`)
+* only push once per invocation
